@@ -25,37 +25,31 @@ class BatchImpl[T](conn: Connection, statement: String ) ( proc: T => List[JdbcV
 
   var toBeCommit = 0
 
-  def addBatch(value: T): Unit = {
+  def addBatch(value: T): Unit =
     val args: Seq[JdbcValue[?]|Null] = proc(value)
     var idx = 1
 
-    while( idx <= args.size ){
+    while( idx <= args.size )
       val para = args(idx-1)
       if(para == null) stmt.setNull(idx, Types.CHAR)
       else para.passIn(stmt, idx)
 
       idx += 1
-    }
+
     stmt.addBatch()
     toBeCommit += 1
-    if(toBeCommit >= autoCommitCount) {
+    if(toBeCommit >= autoCommitCount)
       stmt.executeBatch()
       toBeCommit = 0
-    }
 
-  }
 
-  override def commit(): Unit = {
-    if(toBeCommit > 0) {
+  override def commit(): Unit =
+    if(toBeCommit > 0)
       stmt.executeBatch()
       toBeCommit = 0
-    }
-  }
 
-  override def close(): Unit = {
+  override def close(): Unit =
     commit()
     stmt.close()
-  }
-
 
 }

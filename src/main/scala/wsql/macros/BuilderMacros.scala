@@ -138,20 +138,19 @@ object BuilderMacros {
 
     // src -> fieldName -> fieldSymbol
     val sourceFields: Map[Term, Map[String, Symbol]] = extractSeq(sources).filter(_.tpe.typeSymbol.flags.is(Flags.Case))
-      .map { term =>
+      .map: term =>
         val tpeSym = term.tpe.typeSymbol
         (term, tpeSym.caseFields.map( f => (f.name, f) ).toMap)
-      }.toMap
+      .toMap
 
-    val additionParams: Map[String, Expr[Any]] = extractSeq(additions).flatMap { term =>
-          term.asExpr match {
+    val additionParams: Map[String, Expr[Any]] = extractSeq(additions).flatMap: term =>
+          term.asExpr match
             case '{ ($a: String) -> ($b: Any) } =>
               Some( Expr.unapply(a).get -> b )
             case _ => // TODO support (String, Any)
               report.error("*** unmatched expr " + term.show)
               None
-          }
-        }.toMap
+        .toMap
 
     val fields = TypeTree.of[T].tpe.typeSymbol.caseFields
 
@@ -165,19 +164,18 @@ object BuilderMacros {
     val fieldExprs: List[Term] = fields.map { field =>
       val name = field.name
 
-      def defaultValue: Option[Expr[Any]] = defaultParams.get(name) match {
+      def defaultValue: Option[Expr[Any]] = defaultParams.get(name) match
         case Some(expr) => Some(expr)
         case None => // test field's type is Option[?]
           val isOption = field.tree.asInstanceOf[ValDef].tpt.tpe.widen <:< TypeRepr.of[Option[?]]
           if isOption then Some('{ None })
           else None
-      }
 
       def fromSourceFields: Option[Expr[Any]] =
-        sourceFields.toList.filter{ case (term, fields) => fields.contains(name) }.map {
+        sourceFields.toList.filter{ case (term, fields) => fields.contains(name) }.map:
           case (term, fields) =>
             Select.unique(term, name).asExpr.asInstanceOf[Expr[Any]]
-        } match {
+        match
           case Nil => None
           case x :: Nil => // TODO exist field but type not matched, prompt error
             (x.asTerm.tpe.asType, field.tree.asInstanceOf[ValDef].tpt.tpe.asType) match
@@ -186,7 +184,6 @@ object BuilderMacros {
           case _ =>
             report.error(s"field $name exists in multiple sources")  // TODO more information
             None
-        }
 
       val expr = additionParams.get(name)
         .orElse(fromSourceFields)
@@ -201,9 +198,9 @@ object BuilderMacros {
 
     val constructor = TypeTree.of[T].tpe.typeSymbol.primaryConstructor
 
-    val block = ValDef.let( Symbol.spliceOwner, fieldExprs  ) { refs =>
+    val block = ValDef.let( Symbol.spliceOwner, fieldExprs):  refs =>
       Apply( Select( New(TypeTree.of[T]), constructor), refs)
-    }.asExpr.asInstanceOf[Expr[T]]
+    .asExpr.asInstanceOf[Expr[T]]
 
 //    dump(block)
 

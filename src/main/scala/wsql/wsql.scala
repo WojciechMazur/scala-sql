@@ -278,9 +278,6 @@ object JdbcValue:
   given _nn [T <: AnyVal: JdbcValueAccessor]: Conversion[Option[T], JdbcValue[Option[T]]] with
     override def apply(t: Option[T]): JdbcValue[Option[T]] = JdbcValue(t)(using summon[JdbcValueAccessor[Option[T]]])
 
-//  given _null [T <: AnyRef](using JdbcValueAccessor[T|Null]): Conversion[Option[T], JdbcValue[Option[T]]] with
-//    override def apply(t: Option[T]): JdbcValue[Option[T]] = JdbcValue(t)(using summon[JdbcValueAccessor[Option[T]]])
-
 extension (sc: StringContext)
   def sql(args: JdbcValue[?]|Null *): SQLWithArgs = SQLWithArgs(sc.parts.mkString("?"), args)
 

@@ -4,7 +4,7 @@ name := "wsql"
 
 version := "3.0.0-RC2"
 
-scalaVersion := "3.3.0"
+scalaVersion := "3.3.1"
 
 scalacOptions := Seq( "-Yexplicit-nulls" )
 
@@ -35,7 +35,7 @@ publishTo := {
 publishConfiguration  := publishConfiguration.value.withOverwrite(true)
 
 
-publishArtifact in Test := false
+Test/publishArtifact := false
 
 pomIncludeRepository := { _ => false }
 

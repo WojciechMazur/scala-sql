@@ -18,7 +18,7 @@ import scala.reflect.ClassTag
 object Row {
   inline def ??? = throw new UnsupportedOperationException
 
-  sealed abstract class Cell[T](val name: String, val sqltype: Int, val value: T) {
+  sealed abstract class Cell[T](val name: String, val sqltype: Int, val value: T):
     def isNull: Boolean = false
     def getString: String|Null =
       if isNull then null
@@ -51,77 +51,77 @@ object Row {
     def getObject: AnyRef|Null = value.asInstanceOf[AnyRef]
 
     override def toString = s"$name:$value"
-  }
-  private class BooleanCell(name:String, sqlType: Int, value: Boolean) extends Cell(name, sqlType, value) {
+
+  private class BooleanCell(name:String, sqlType: Int, value: Boolean) extends Cell(name, sqlType, value):
     override def getBoolean: Boolean = value
     override def getLong: Long = if value then 1 else 0
     override def getString: String = value.toString
-  }
-  private class ByteCell(name:String, sqltype: Int, value: Byte) extends Cell(name, sqltype, value) {
+
+  private class ByteCell(name:String, sqltype: Int, value: Byte) extends Cell(name, sqltype, value):
     override def getShort: Short = value.toShort
     override def getInt: Int = value.toInt
     override def getLong: Long = value.toLong
-  }
-  private class ShortCell(name:String, sqltype:Int, value: Short) extends Cell(name, sqltype, value) {
+
+  private class ShortCell(name:String, sqltype:Int, value: Short) extends Cell(name, sqltype, value):
     override def getInt: Int = value.toInt
     override def getLong: Long = value.toLong
-  }
-  private class IntegerCell(name:String, sqltype:Int, value: Int) extends Cell(name, sqltype, value) {
+
+  private class IntegerCell(name:String, sqltype:Int, value: Int) extends Cell(name, sqltype, value):
     override def getLong: Long = value.toLong
-  }
-  private class LongCell(name:String, sqltype:Int, value: Long) extends Cell(name, sqltype, value) {
+
+  private class LongCell(name:String, sqltype:Int, value: Long) extends Cell(name, sqltype, value):
     override def getLong: Long = value
-  }
-  private class BigIntegerCell(name: String, sqltype: Int, value: BigInt) extends Cell(name, sqltype, value) {
+
+  private class BigIntegerCell(name: String, sqltype: Int, value: BigInt) extends Cell(name, sqltype, value):
     override def getLong: Long = value.longValue
     override def getBigDecimal: JBigDecimal | Null = JBigDecimal(value.bigInteger)
-  }
-  private class FloatCell(name:String, sqltype: Int, value: Float) extends Cell(name, sqltype, value) {
+
+  private class FloatCell(name:String, sqltype: Int, value: Float) extends Cell(name, sqltype, value):
     override def getLong: Long = value.toLong
     override def getDouble: Double = value.toDouble
-  }
-  private class DoubleCell(name:String, sqltype: Int, value: Double) extends Cell(name, sqltype, value) {
+
+  private class DoubleCell(name:String, sqltype: Int, value: Double) extends Cell(name, sqltype, value):
     override def getLong: Long = value.toLong
     override def getDouble: Double = value
-  }
-  private class StringCell(name:String, sqltype: Int, value: String) extends Cell(name, sqltype, value) {
+
+  private class StringCell(name:String, sqltype: Int, value: String) extends Cell(name, sqltype, value):
     override def getLong: Long = value.toLong
     override def getDouble: Double = value.toDouble
     override def getBigDecimal: JBigDecimal = new JBigDecimal(value)
-  }
-  private class BigDecimalCell(name:String, sqltype:Int, value: JBigDecimal) extends Cell(name, sqltype, value){
+
+  private class BigDecimalCell(name:String, sqltype:Int, value: JBigDecimal) extends Cell(name, sqltype, value):
     override def getLong: Long = value.longValue
     override def getDouble: Double = value.doubleValue
     override def getBigDecimal: JBigDecimal = value
-  }
-  private class DateCell(name:String, sqltype:Int, value: java.sql.Date) extends Cell(name, sqltype, value) {
+
+  private class DateCell(name:String, sqltype:Int, value: java.sql.Date) extends Cell(name, sqltype, value):
     override def getDate: Date  = value
     override def getTime: Time = new Time(value.getTime.nn)
     override def getTimestamp: Timestamp  = new Timestamp(value.getTime.nn)
 
     override def getLong: Long = ???
-  }
-  private class TimeCell(name:String, sqltype: Int, value: java.sql.Time) extends Cell(name, sqltype, value) {
+
+  private class TimeCell(name:String, sqltype: Int, value: java.sql.Time) extends Cell(name, sqltype, value):
     override def getTime: Time = value
     override def getDate: Date = new Date(value.getTime)
     override def getTimestamp: Timestamp = new Timestamp(value.getTime)
 
     override def getLong: Long = ???
-  }
-  private class TimestampCell(name:String, sqltype: Int, value: java.sql.Timestamp) extends Cell(name, sqltype, value){
+
+  private class TimestampCell(name:String, sqltype: Int, value: java.sql.Timestamp) extends Cell(name, sqltype, value):
     override def getTimestamp: Timestamp = value
     override def getDate: Date = new Date(value.getTime)
     override def getTime: Time = new Time(value.getTime)
 
     override def getLong: Long = ???
-  }
-  private class BytesCell(name:String, sqltype: Int, value: Array[Byte]) extends Cell(name, sqltype, value) {
+
+  private class BytesCell(name:String, sqltype: Int, value: Array[Byte]) extends Cell(name, sqltype, value):
     override def getString: String = new String(value)
     override def getBytes: Array[Byte] = value
 
     override def getLong: Long = ???
-  }
-  private class NullCell[T](name: String, sqltype:Int) extends Cell[T](name, sqltype, null.asInstanceOf[T]) {
+
+  private class NullCell[T](name: String, sqltype:Int) extends Cell[T](name, sqltype, null.asInstanceOf[T]):
     override def isNull: Boolean = true
     override def getLong: Long = 0
     override def getString: String | Null = null
@@ -130,13 +130,12 @@ object Row {
     override def getTime: Time | Null = null
     override def getTimestamp: Timestamp | Null = null
     override def getBytes: Array[Byte] | Null = null
-  }
-  class Cell_???(name: String, sqltype: Int) extends Cell[Unit](name, sqltype, ()) {
+
+  class Cell_???(name: String, sqltype: Int) extends Cell[Unit](name, sqltype, ()):
     override def getLong: Long = ???
     override def getString: String = ???
-  }
 
-  private def resultSetToRow(meta: ResultSetMetaData, rs: ResultSet): Row = {
+  private def resultSetToRow(meta: ResultSetMetaData, rs: ResultSet): Row =
     val cells: Seq[Cell[_]] = {
       for (i <- 1 to meta.getColumnCount) yield {
         val name = meta.getColumnLabel(i).nn
@@ -145,7 +144,7 @@ object Row {
         val isSigned = meta.isSigned(i)
 
         if (isnull) new NullCell(name, sqltype)
-        else sqltype match {
+        else sqltype match
           case Types.DECIMAL | Types.NUMERIC => new BigDecimalCell(name, sqltype, rs.getBigDecimal(i).nn)
           case Types.BINARY | Types.BLOB | Types.LONGVARBINARY | Types.VARBINARY => new BytesCell(name, sqltype, rs.getBytes(i).nn)
           case Types.BIT | Types.BOOLEAN => new BooleanCell(name, sqltype, rs.getBoolean(i))
@@ -173,11 +172,10 @@ object Row {
             new TimestampCell(name, sqltype, rs.getTimestamp(i).nn)
           case _ =>
             new Cell_???(name, sqltype) // no error, but that's is not accessable
-        }
+
       }
     }
     new Row(cells)
-  }
 
   given resultSetMapper: ResultSetMapper[Row] with
     override def from(rs: ResultSet): Row = resultSetToRow(rs.getMetaData.nn, rs)
@@ -185,12 +183,12 @@ object Row {
 }
 
 // make Row extends ResultSet so we can using JavaValueAccessor.
-class Row(val cells: Seq[Row.Cell[_]]) extends ResultSet {
+class Row(val cells: Seq[Row.Cell[_]]) extends ResultSet:
   import Row._
 
-  private lazy val cellsByName: Map[String, Cell[_]] = cells.map { cell =>
+  private lazy val cellsByName: Map[String, Cell[_]] = cells.map: cell =>
     (cell.name.toLowerCase.nn, cell)
-  }.toMap
+  .toMap
 
   override def toString: String = cells.map(_.toString).mkString("Row(", ",", ")")
 
@@ -411,5 +409,5 @@ class Row(val cells: Seq[Row.Cell[_]]) extends ResultSet {
   def updateBinaryStream(columnLabel: String, x: InputStream): Unit = ???
   def unwrap[T](iface: Class[T]): T = ???
   def isWrapperFor(iface: Class[_]): Boolean = ???
-}
+
 

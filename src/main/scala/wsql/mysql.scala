@@ -2,44 +2,39 @@ package wsql
 
 import java.sql.{DriverManager, PreparedStatement, ResultSet}
 
-object mysql {
+object mysql:
 
   // support for Mysql Bit(n)
   // which can't mapping to getInt/getString correctly
-  case class MySqlBitSet(val mask: Long) {
-
-    def isSet(n: Int) = {
+  case class MySqlBitSet(val mask: Long):
+    def isSet(n: Int): Boolean =
       assert(n >= 0 && n < 64)
       ((mask >> n) & 0x1L) == 1
-    }
 
     override def toString: String = s"b'${mask.toBinaryString}'"
 
-  }
 
-  object MySqlBitSet {
+  object MySqlBitSet:
 
-    implicit object jdbcValueAccessor extends JdbcValueAccessor[MySqlBitSet|Null] {
+    implicit object jdbcValueAccessor extends JdbcValueAccessor[MySqlBitSet|Null]:
 
       override def passIn(stmt: PreparedStatement, index: Int, value: MySqlBitSet|Null): Unit =
         if(value == null) stmt.setNull(index, java.sql.Types.ARRAY)
         else stmt.setBytes(index, toByteArray(value.mask))
 
-      override def passOut(rs: ResultSet, index: Int): MySqlBitSet|Null = {
+      override def passOut(rs: ResultSet, index: Int): MySqlBitSet|Null =
         val v = rs.getBytes(index)
         if(v != null)
           new MySqlBitSet(fromByteArray(v))
         else null
-      }
 
-      override def passOut(rs: ResultSet, name: String): MySqlBitSet|Null = {
+      override def passOut(rs: ResultSet, name: String): MySqlBitSet|Null =
         val v = rs.getBytes(name)
         if(v != null)
           new MySqlBitSet(fromByteArray(v))
         else null
-      }
 
-      def toByteArray(l: Long): Array[Byte] = {
+      def toByteArray(l: Long): Array[Byte] =
         val b0 = (l & 0xFF).toByte
         val b1 = ((l >> 8) & 0xFF).toByte
         val b2 = ((l >> 16) & 0xFF).toByte
@@ -49,9 +44,8 @@ object mysql {
         val b6 = ((l >> 48) & 0xFF).toByte
         val b7 = ((l >> 56) & 0xFF).toByte
         Array(b7, b6, b5, b4, b3, b2, b1, b0)
-      }
 
-      def fromByteArray(bytes: Array[Byte]): Long = {
+      def fromByteArray(bytes: Array[Byte]): Long =
         assert(bytes.length <= 8)
         var shift = (bytes.length - 1) * 8
 
@@ -60,11 +54,4 @@ object mysql {
           mask = mask | ((b & 0xFF) << shift)
           shift -= 8
         }
-
         mask
-      }
-    }
-  }
-
-
-}

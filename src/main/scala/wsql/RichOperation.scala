@@ -84,7 +84,7 @@ given ConnectionOps with
       t.get
 
 
-    def eachRow[T: ResultSetMapper](sql: SQLWithArgs)(f: T => Unit): Unit = withPreparedStatement(sql.sql) { prepared =>
+    def eachRow[T: ResultSetMapper](sql: SQLWithArgs)(f: T => Unit): Unit = withPreparedStatement(sql.sql): prepared =>
       setStatementArgs(prepared, sql.args)
 
       if(LOG.isDebugEnabled) LOG.debug("SQL Preparing: {} args: {}", Seq(sql.sql, sql.args): _*)
@@ -97,9 +97,8 @@ given ConnectionOps with
         f( mapper.from(rs) )
         rowCount += 1
       if(LOG.isDebugEnabled) LOG.debug("SQL result: {}", rowCount)
-    }
 
-    def rows[T: ResultSetMapper](sql: SQLWithArgs): List[T] = withPreparedStatement(sql.sql) { prepared =>
+    def rows[T: ResultSetMapper](sql: SQLWithArgs): List[T] = withPreparedStatement(sql.sql): prepared =>
       val buffer = new ListBuffer[T]()
       setStatementArgs(prepared, sql.args)
 
@@ -112,9 +111,8 @@ given ConnectionOps with
 
       if(LOG.isDebugEnabled) LOG.debug("SQL result: {}", buffer.size)
       buffer.toList
-    }
 
-    def joinRows2[T1: ResultSetMapper, T2: ResultSetMapper](sql: SQLWithArgs): List[(T1, T2)] = withPreparedStatement(sql.sql) { prepared =>
+    def joinRows2[T1: ResultSetMapper, T2: ResultSetMapper](sql: SQLWithArgs): List[(T1, T2)] = withPreparedStatement(sql.sql): prepared =>
       val buffer = new ListBuffer[(T1, T2)]()
       setStatementArgs(prepared, sql.args)
 
@@ -130,9 +128,8 @@ given ConnectionOps with
       if(LOG.isDebugEnabled) LOG.debug("SQL result: {}", buffer.size)
 
       buffer.toList
-    }
 
-    def joinRows3[T1: ResultSetMapper, T2: ResultSetMapper, T3: ResultSetMapper](sql: SQLWithArgs): List[(T1, T2, T3)] = withPreparedStatement(sql.sql) { prepared =>
+    def joinRows3[T1: ResultSetMapper, T2: ResultSetMapper, T3: ResultSetMapper](sql: SQLWithArgs): List[(T1, T2, T3)] = withPreparedStatement(sql.sql): prepared =>
       val buffer = new ListBuffer[(T1, T2, T3)]()
       setStatementArgs(prepared, sql.args)
 
@@ -149,9 +146,8 @@ given ConnectionOps with
       if(LOG.isDebugEnabled) LOG.debug("SQL result: {}", buffer.size)
 
       buffer.toList
-    }
 
-    def joinRows4[T1: ResultSetMapper, T2: ResultSetMapper, T3: ResultSetMapper, T4: ResultSetMapper](sql: SQLWithArgs): List[(T1, T2, T3, T4)] = withPreparedStatement(sql.sql) { prepared =>
+    def joinRows4[T1: ResultSetMapper, T2: ResultSetMapper, T3: ResultSetMapper, T4: ResultSetMapper](sql: SQLWithArgs): List[(T1, T2, T3, T4)] = withPreparedStatement(sql.sql): prepared =>
       val buffer = new ListBuffer[(T1, T2, T3, T4)]()
       setStatementArgs(prepared, sql.args)
 
@@ -169,9 +165,8 @@ given ConnectionOps with
       if(LOG.isDebugEnabled) LOG.debug("SQL result: {}", buffer.size)
 
       buffer.toList
-    }
 
-    def row[T: ResultSetMapper](sql: SQLWithArgs): Option[T] = withPreparedStatement(sql.sql) { prepared =>
+    def row[T: ResultSetMapper](sql: SQLWithArgs): Option[T] = withPreparedStatement(sql.sql): prepared =>
       setStatementArgs(prepared, sql.args)
 
       if(LOG.isDebugEnabled) LOG.debug("SQL Preparing: {} args: {}", Seq(sql.sql, sql.args): _*)
@@ -189,9 +184,8 @@ given ConnectionOps with
         if(LOG.isDebugEnabled) LOG.debug("SQL result: 0")
 
       result
-    }
 
-    def joinRow2[T1: ResultSetMapper, T2: ResultSetMapper](sql: SQLWithArgs): Option[(T1, T2)] = withPreparedStatement(sql.sql) { prepared =>
+    def joinRow2[T1: ResultSetMapper, T2: ResultSetMapper](sql: SQLWithArgs): Option[(T1, T2)] = withPreparedStatement(sql.sql): prepared =>
       setStatementArgs(prepared, sql.args)
 
       if(LOG.isDebugEnabled) LOG.debug("SQL Preparing: {} args: {}", Seq(sql.sql, sql.args): _*)
@@ -211,9 +205,8 @@ given ConnectionOps with
         if(LOG.isDebugEnabled) LOG.debug("SQL result: 0")
 
       result
-    }
 
-    def joinRow3[T1: ResultSetMapper, T2: ResultSetMapper, T3: ResultSetMapper](sql: SQLWithArgs): Option[(T1, T2, T3)] = withPreparedStatement(sql.sql) { prepared =>
+    def joinRow3[T1: ResultSetMapper, T2: ResultSetMapper, T3: ResultSetMapper](sql: SQLWithArgs): Option[(T1, T2, T3)] = withPreparedStatement(sql.sql): prepared =>
       setStatementArgs(prepared, sql.args)
 
       if(LOG.isDebugEnabled) LOG.debug("SQL Preparing: {} args: {}", Seq(sql.sql, sql.args): _*)
@@ -235,9 +228,8 @@ given ConnectionOps with
         if(LOG.isDebugEnabled) LOG.debug("SQL result: 0")
 
       result
-    }
 
-    def joinRow4[T1: ResultSetMapper, T2: ResultSetMapper, T3: ResultSetMapper, T4: ResultSetMapper](sql: SQLWithArgs): Option[(T1, T2, T3, T4)] = withPreparedStatement(sql.sql) { prepared =>
+    def joinRow4[T1: ResultSetMapper, T2: ResultSetMapper, T3: ResultSetMapper, T4: ResultSetMapper](sql: SQLWithArgs): Option[(T1, T2, T3, T4)] = withPreparedStatement(sql.sql): prepared =>
       setStatementArgs(prepared, sql.args)
 
       if(LOG.isDebugEnabled) LOG.debug("SQL Preparing: {} args: {}", Seq(sql.sql, sql.args): _*)
@@ -260,9 +252,8 @@ given ConnectionOps with
         if(LOG.isDebugEnabled) LOG.debug("SQL result: 0")
 
       result
-    }
 
-    def queryInt(sql: SQLWithArgs): Int = withPreparedStatement(sql.sql) { prepared =>
+    def queryInt(sql: SQLWithArgs): Int = withPreparedStatement(sql.sql): prepared =>
       setStatementArgs(prepared, sql.args)
 
       if(LOG.isDebugEnabled) LOG.debug("SQL Preparing: {} args: {}", Seq(sql.sql, sql.args): _*)
@@ -272,7 +263,6 @@ given ConnectionOps with
       if (rs.next)
         rs.getInt(1)
       else throw new IllegalArgumentException("query return no rows")
-    }
 
 given DataSourceOps with
 

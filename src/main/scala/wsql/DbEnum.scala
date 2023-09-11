@@ -5,8 +5,7 @@ import java.sql.{PreparedStatement, ResultSet}
 /**
  *
  */
-trait DbEnum {
-
+trait DbEnum:
   val id: Int
   val name: String
 
@@ -19,12 +18,10 @@ trait DbEnum {
     else if(getClass.isInstance(obj)) obj.asInstanceOf[DbEnum].id == this.id
     else false
 
-}
 
-class DbEnumJdbcValueAccessor[T <: DbEnum](valueOf: Int => T) extends JdbcValueAccessor[T] {
+class DbEnumJdbcValueAccessor[T <: DbEnum](valueOf: Int => T) extends JdbcValueAccessor[T]:
     override def passIn(stmt: PreparedStatement, index: Int, value: T): Unit = stmt.setInt(index, value.id)
 
     override def passOut(rs: ResultSet, index: Int) = valueOf( rs.getInt(index) )
 
     override def passOut(rs: ResultSet, name: String): T = valueOf( rs.getInt(name) )
-}

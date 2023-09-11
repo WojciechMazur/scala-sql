@@ -15,17 +15,15 @@ object ResultSetMapperMacros:
     val columnMapper: CaseClassColumnMapper =
       val classSymbol = TypeTree.of[T].symbol
       val columnMapperSymbol = TypeTree.of[UseColumnMapper].symbol
-      classSymbol.getAnnotation(columnMapperSymbol) match
-        case Some(term) =>
-          term.asExpr match   // @ColumnMapper(classOf[T])
-            case '{ UseColumnMapper(${value}) } =>
-              value match
-                case '{ $x: t } =>
-                  // println("x: " + x.show + " t: " + TypeTree.of[t].show)
-                  TypeRepr.of[t].widen.asInstanceOf[AppliedType] match
-                    case AppliedType(base, List(clazz)) =>
-                      Class.forName(clazz.widen.show).nn.newInstance().asInstanceOf[CaseClassColumnMapper]
+      classSymbol.getAnnotation(columnMapperSymbol).map(_.asExpr) match
+        case Some('{ UseColumnMapper($value) } ) =>
+          value match
+            case '{ $x: t } =>
+              TypeRepr.of[t].widen.asInstanceOf[AppliedType] match
+                case AppliedType(base, List(clazz)) =>
+                  Class.forName(clazz.widen.show).nn.newInstance().asInstanceOf[CaseClassColumnMapper]
         case None => IdentityMapping()
+        case _ => report.error("UseColumnMapper annotation must be classOf[CaseClassColumnMapper]"); IdentityMapping()
 
     val defaultParams: Map[String, Expr[Any]] =
       val sym = TypeTree.of[T].symbol
@@ -49,35 +47,34 @@ object ResultSetMapperMacros:
       val columnName = columnMapper.columnName(name)
 
       val expr = field.tree.asInstanceOf[ValDef].tpt.tpe.asType match {
-        case '[t] =>
-          Expr.summon[JdbcValueAccessor[t]] match
+        case '[ft] =>
+          Expr.summon[JdbcValueAccessor[ft]] match
             case Some(accessor) =>
-              Type.of[t] match
+              Type.of[ft] match
                 case '[Option[t2]] => // Option[Int] ->
                   val primitive = isPrimitive(TypeRepr.of[t2])
                   val defaultExpr: Expr[Option[t2]] = defaultParams.get(name) match  // Option(Expr[Option[t2]])
                     case Some(deff) =>  '{ ${deff}.asInstanceOf[Option[t2]] } // deff maybe Expr[None] also
                     case None => '{ None }
 
-                  // TODO prompt for summon value not exists
                   if(primitive)
                     '{ withDefaultOptionAnyVal[t2](${Expr(columnName)}, ${defaultExpr}, $rs)(using ${Expr.summon[JdbcValueAccessor[t2]].get}) }
                   else
                     '{ withDefaultOptionAnyRef[t2](${Expr(columnName)}, ${defaultExpr}, $rs)(using ${Expr.summon[JdbcValueAccessor[t2|Null]].get}) }
 
-                case _ => // String
+                case _ => // not Option[?]
                   val (defaultExpr:Expr[Option[Any]], none) = defaultParams.get(name) match
                     case Some(deff) => ('{ Some(${deff}) }, false)
                     case None => ('{ None }, true)
-                  val primitive = isPrimitive(TypeRepr.of[t])
+                  val primitive = isPrimitive(TypeRepr.of[ft])
 
                   if none == true then
-                    '{ withoutDefault[t](${Expr(columnName)}, $rs)(using $accessor) }
+                    '{ withoutDefault[ft](${Expr(columnName)}, $rs)(using $accessor) }
                   else
-                    '{ withDefault[t](${Expr(columnName)}, ${Expr(primitive)}, ${defaultExpr}.asInstanceOf[Some[t]], $rs)(using $accessor) }
+                    '{ withDefault[ft](${Expr(columnName)}, ${Expr(primitive)}, ${defaultExpr}.asInstanceOf[Some[ft]], $rs)(using $accessor) }
 
-            case None =>
-              report.error(s"No JdbcValueAccessor found, owner:${TypeTree.of[T].show} field:$name type:${TypeTree.of[t].show}")
+            case None => // No JdbcValueAccessor[ft] found
+              report.error(s"No JdbcValueAccessor found, owner:${TypeTree.of[T].show} field:$name type:${TypeTree.of[ft].show}")
               '{ ??? }
       }
       expr.asTerm
