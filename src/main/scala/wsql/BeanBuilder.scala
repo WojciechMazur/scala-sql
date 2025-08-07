@@ -13,7 +13,14 @@ import wsql.macros.BuilderMacros
   * overhead while maintaining type safety. The builder supports complex type conversions, nested objects,
   * collection transformations, and Option type handling.
   * 
-  * @example Basic usage:
+  * == Features ==
+  *  - '''Compile-time safety''': All type checking and code generation happens at compile time
+  *  - '''Zero runtime overhead''': Generated code directly calls constructors without reflection
+  *  - '''Intelligent type conversion''': Supports implicit conversions, Option handling, and collection transformations
+  *  - '''Nested object support''': Recursively transforms nested case classes
+  *  - '''Flexible field mapping''': Maps fields by name with customizable precedence rules
+  * 
+  * == Basic Usage ==
   * {{{
   * case class PersonA(name: String, age: Int)
   * case class PersonB(name: String, age: Int, status: String = "active")
@@ -22,6 +29,34 @@ import wsql.macros.BuilderMacros
   * val personB = BeanBuilder.build[PersonB](personA)  // PersonB("John", 30, "active")
   * }}}
   * 
+  * == Advanced Usage ==
+  * {{{
+  * // Complex type conversions with custom implicit conversions
+  * given Conversion[String, Int] = Integer.parseInt
+  * case class Source(name: String, age: String, tags: Seq[String])
+  * case class Target(name: String, age: Option[Int], tags: List[String])
+  * 
+  * import BeanBuilder.CollectionConverters.given
+  * val source = Source("Alice", "25", Seq("admin", "user"))
+  * val target = BeanBuilder.build[Target](source)
+  * // Target("Alice", Some(25), List("admin", "user"))
+  * }}}
+  * 
+  * == Field Resolution Priority ==
+  * 1. `additions` parameter values (highest priority)
+  * 2. Source object fields (matched by name, at most 1 source, otherwise need specified in additions)
+  * 3. Target case class default parameter values
+  * 4. Option[T] fields default to None (lowest priority)
+  * 
+  * == Best Practices ==
+  *  - Use meaningful field names that match across source and target types
+  *  - Import `CollectionConverters.given` when working with different collection types
+  *  - Define custom `given Conversion[A, B]` instances for domain-specific transformations
+  *  - Prefer immutable case classes for both source and target types
+  *  - Use default parameters in target case classes to handle missing fields gracefully
+  * 
+  * @note Target type must be a case class with `deriving.Mirror.ProductOf` support
+  * @note Self-referencing case classes are not currently supported, TODO add self-referencing in future version.
   * TODO support camel and underscore name mapping like doSomething <-> do_something
   */
 object BeanBuilder {
