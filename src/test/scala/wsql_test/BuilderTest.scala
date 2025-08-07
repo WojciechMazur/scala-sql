@@ -3,6 +3,8 @@ package wsql_test
 import org.scalatest.funsuite.AnyFunSuite
 import wsql.BeanBuilder
 
+import java.util
+
 class BuilderTest extends AnyFunSuite {
 
   test("basic builder") {
@@ -110,6 +112,89 @@ class BuilderTest extends AnyFunSuite {
       val user2 = BeanBuilder.build[User2](user)
       assert(user2 == User2("John", 20, User2("Steven", 50, null)))
     """)
+  }
+
+  test("CollectionConverters - Seq to List") {
+    import BeanBuilder.CollectionConverters.given
+    
+    val seq: Seq[String] = Seq("a", "b", "c")
+    val list: List[String] = seq
+    assert(list == List("a", "b", "c"))
+    assert(list.isInstanceOf[List[String]])
+  }
+
+  test("CollectionConverters - Seq to Array") {
+    import BeanBuilder.CollectionConverters.given
+    
+    val seq: Seq[Int] = Seq(1, 2, 3)
+    val array: Array[Int] = seq
+    assert( util.Arrays.equals(array, Array(1,2,3)) )
+  }
+
+  test("CollectionConverters - Array to Seq") {
+    import BeanBuilder.CollectionConverters.given
+    
+    val array: Array[String] = Array("x", "y", "z")
+    val seq: Seq[String] = array
+    assert(seq == Seq("x", "y", "z"))
+  }
+
+  test("CollectionConverters - List to Array") {
+    import BeanBuilder.CollectionConverters.given
+    
+    val list: List[Double] = List(1.0, 2.0, 3.0)
+    val array: Array[Double] = list
+    assert(array.sameElements(Array(1.0, 2.0, 3.0)))
+  }
+
+  test("CollectionConverters - Array to List") {
+    import BeanBuilder.CollectionConverters.given
+    
+    val array: Array[Char] = Array('a', 'b', 'c')
+    val list: List[Char] = array
+    assert(list == List('a', 'b', 'c'))
+    assert(list.isInstanceOf[List[Char]])
+  }
+
+  test("CollectionConverters - complex type conversion") {
+    import BeanBuilder.CollectionConverters.given
+    
+    case class TestData(value: String)
+    val seq: Seq[TestData] = Seq(TestData("test1"), TestData("test2"))
+    val list: List[TestData] = seq
+    val array: Array[TestData] = seq
+    
+    assert(list == List(TestData("test1"), TestData("test2")))
+    assert(array.sameElements(Array(TestData("test1"), TestData("test2"))))
+  }
+
+  test("build method with empty sources") {
+    case class SimpleCase(name: String = "default", age: Int = 0)
+    
+    val result = BeanBuilder.build[SimpleCase]()
+    assert(result == SimpleCase("default", 0))
+  }
+
+  test("build method with multiple sources") {
+    case class Source1(name: String, value: Int)
+    case class Source2(age: Int, active: Boolean)
+    case class Target(name: String, age: Int, value: Int, active: Boolean)
+    
+    val src1 = Source1("test", 42)
+    val src2 = Source2(25, true)
+    
+    val result = BeanBuilder.build[Target](src1, src2)
+    assert(result == Target("test", 25, 42, true))
+  }
+
+  test("build method with additions override") {
+    case class Source(name: String, age: Int)
+    case class Target(name: String, age: Int, status: String = "unknown")
+    
+    val source = Source("Alice", 30)
+    val result = BeanBuilder.build[Target](source)("age" -> 35, "status" -> "active")
+    
+    assert(result == Target("Alice", 35, "active"))
   }
 
 }
